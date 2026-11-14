@@ -69,6 +69,18 @@ window.addEventListener('message',function(e){
   if(v===viewOf()){refresh(v);return;} /* 지금 탭을 다시 누르면 데이터만 새로 받기 */
   history.pushState(null,'',v?'#'+v:location.pathname);show(v);
 });
+/* 📱 아이폰: 안쪽 화면(구글 주소)의 저장 공간은 앱을 닫으면 지워짐 → 비밀번호 · 이름 · 화면 설정을 여기(설치 페이지)에 같이 보관했다가 돌려줌 */
+var GOK=/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/;
+function stGet(){try{return JSON.parse(localStorage.getItem('rl_store')||'{}')||{};}catch(e){return {};}}
+function stPut(o){try{localStorage.setItem('rl_store',JSON.stringify(o));}catch(e){}}
+function frameOf(src){for(var k in F){var w=F[k].el.contentWindow;if(!w)continue;if(w===src)return k;try{for(var i=0;i<w.frames.length;i++){if(w.frames[i]===src)return k;for(var j=0;j<w.frames[i].frames.length;j++)if(w.frames[i].frames[j]===src)return k;}}catch(e){}}return null;}
+window.addEventListener('message',function(e){
+  var d=e.data;if(!d||typeof d.rl!=='string'||!GOK.test(e.origin))return;
+  if(d.rl==='save'&&typeof d.k==='string'&&/^rl_/.test(d.k)){var o=stGet();if(d.v==null)delete o[d.k];else o[d.k]=String(d.v).slice(0,2000);stPut(o);}
+  else if(d.rl==='sync'&&d.s&&typeof d.s==='object'){var o2=stGet(),n=0;for(var k in d.s)if(/^rl_/.test(k)&&typeof d.s[k]==='string'&&!(k in o2)){o2[k]=d.s[k].slice(0,2000);n++;}if(n)stPut(o2);}
+  else if(d.rl==='need'){try{e.source.postMessage({rl:'store',s:stGet()},e.origin);}catch(_){}}
+  else if(d.rl==='reload'){var v=frameOf(e.source);if(v!==null){F[v].ready=false;if(CUR===v)sp.classList.remove('off');F[v].el.src=EXEC+VIEWS[v];}}
+});
 window.addEventListener('popstate',function(){show(viewOf());});
 function net(){document.getElementById('net').style.display=navigator.onLine?'none':'block';}
 window.addEventListener('online',function(){net();show(viewOf(),true);});window.addEventListener('offline',net);net();
