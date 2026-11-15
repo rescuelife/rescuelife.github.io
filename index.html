@@ -23,41 +23,52 @@
   #frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#F3F1EC;visibility:hidden;pointer-events:none}
   #frames iframe.on{visibility:visible;pointer-events:auto;z-index:1}
   #bar{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top);background:#15171C}
-  #splash{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;transition:opacity .35s ease;z-index:5;overflow:hidden;cursor:default}
+  #splash{position:fixed;inset:0;background:radial-gradient(120% 80% at 50% 45%,#fff 55%,#F3F5F8 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;transition:opacity .45s ease;z-index:5;overflow:hidden;cursor:default}
   #splash.off{opacity:0;pointer-events:none}
-  #splash.off .lg{transform:scale(1.06)}
-  /* 🚑 시작 로고 애니메이션: 심전도 선이 달려와 → R이 위(빨강)·아래(파랑)에서 맞물림 → 심장 박동 + 경광등 → RESCUE LIFE */
-  .lg{position:relative;width:min(78vw,340px);aspect-ratio:935/240;transition:transform .35s ease}
-  .lg img{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-user-drag:none;user-select:none}
-  .lg .rt{clip-path:inset(0 72.7% 40% 0);animation:rt .42s cubic-bezier(.3,.8,.3,1) .74s both}
-  .lg .rb{clip-path:inset(60% 72.7% 0 0);animation:rb .42s cubic-bezier(.3,.8,.3,1) .74s both}
-  .lg .rr{position:absolute;left:0;top:0;width:27.3%;height:100%;transform-origin:46% 50%;animation:beat .5s ease-out 1.14s both,beat 1.3s ease-in-out 2.4s infinite}
-  .lg .rr img{width:366.3%}
-  .lg .tx{clip-path:inset(0 0 0 27.3%);animation:tx .6s cubic-bezier(.25,.8,.3,1) 1.4s both}
-  .lg svg.ecg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2;transform-origin:12.56% 50%;animation:beat .5s ease-out 1.14s both,fo .25s ease 1.85s forwards}
-  .ecg path{fill:none;filter:drop-shadow(0 0 5px rgba(255,40,60,.5));stroke:#E30011;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:2}
-  .ecg .a{stroke-dasharray:100;stroke-dashoffset:100;animation:dr .76s cubic-bezier(.35,0,.6,1) .02s forwards,wh .65s ease-in-out 1.15s forwards}
-  .lg .ring{position:absolute;left:13.6%;top:50%;width:30%;aspect-ratio:1;border:3px solid #E30011;border-radius:50%;transform:translate(-50%,-50%) scale(.5);opacity:0;animation:ring .9s ease-out 1.16s forwards}
-  .lg .ring.r2{animation-delay:1.4s;border-color:#003A7C}
-  .lg .gl{position:absolute;top:50%;width:22%;aspect-ratio:1;border-radius:50%;filter:blur(16px);opacity:0;transform:translate(-50%,-50%)}
-  .lg .gl.r{left:4%;background:#ff2a3a;animation:sir .5s ease-in-out 1.16s 2}
-  .lg .gl.b{left:24%;background:#2a6bff;animation:sir .5s ease-in-out 1.4s 2}
-  .ld{display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;animation:fi .4s ease 2.1s both}
-  .ld svg{width:120px;height:24px;overflow:visible}
-  .ld path{fill:none;stroke:#E30011;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60 200;animation:mon 1.3s linear infinite}
-  .ld span{font-size:13.5px;color:#5B606B;letter-spacing:.02em}
+  #splash.off .lg{transform:scale(1.05)}
+  /* 🚑 시작 로고: 빨간 심전도가 달려와 → 그 선에서 R이 위(빨강)·아래(파랑)로 차오름 → 박동 한 번 → 빨간 선 위로 흰 선이 지나가며 로고의 흰 심전도가 됨 → RESCUE / LIFE 가 한 줄씩 올라옴 → 빛이 한 번 스침 */
+  .lg{position:relative;width:min(78vw,340px);aspect-ratio:935/240;transition:transform .45s ease}
+  .lg img{position:absolute;display:block;-webkit-user-drag:none;user-select:none}
+  .lg .rr{position:absolute;left:0;top:0;width:27.3%;height:100%;transform-origin:46% 50%;animation:pop .55s cubic-bezier(.16,1,.3,1) .72s backwards,beat .5s cubic-bezier(.3,0,.3,1) 1.16s,idle 1.4s ease-in-out 2.7s infinite}
+  .lg .rr img{left:0;top:0;width:366.3%;height:100%}
+  .lg .rt{clip-path:inset(0 72.7% 40% 0);animation:rt .55s cubic-bezier(.16,1,.3,1) .72s both}
+  .lg .rb{clip-path:inset(59.5% 72.7% 0 0);animation:rb .55s cubic-bezier(.16,1,.3,1) .72s both}
+  .lg .sh{position:absolute;inset:0;-webkit-mask:url(logo-full.png) 0 0/366.3% 100% no-repeat;mask:url(logo-full.png) 0 0/366.3% 100% no-repeat;background:linear-gradient(105deg,rgba(255,255,255,0) 38%,rgba(255,255,255,.5) 50%,rgba(255,255,255,0) 62%) 100% 0/300% 100% no-repeat;animation:sh .75s cubic-bezier(.4,0,.2,1) 1.8s both}
+  .lg svg.ecg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2;transform-origin:12.56% 50%;animation:beat .5s cubic-bezier(.3,0,.3,1) 1.16s,fo .2s ease 2s forwards}
+  .ecg path{fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:100 100;stroke-dashoffset:100}
+  .ecg .a{stroke:#E30011;filter:drop-shadow(0 0 4px rgba(255,40,60,.45));animation:ra 1.9s linear .02s forwards,fo .22s ease 1.72s forwards}
+  .ecg .w{stroke:#fff;stroke-width:13;animation:dr .6s cubic-bezier(.45,0,.25,1) 1.2s forwards}
+  .ecg circle{display:none;fill:#FF2A3A;filter:drop-shadow(0 0 7px #ff3b4a)}
+  @supports (offset-path:path("M0 0 H1")){.ecg circle{display:block;offset-path:path("M-700 143 H24 L48 108 L60 169 L88 57 L107 224 L129 117 L140 137");offset-rotate:0deg;animation:hd 1.9s linear .02s both}}
+  .lg .ring{position:absolute;left:12.56%;top:50%;width:30%;aspect-ratio:1;border:1.5px solid rgba(227,0,17,.55);border-radius:50%;opacity:0;transform:translate(-50%,-50%) scale(.7);animation:ring .9s cubic-bezier(.16,1,.3,1) 1.18s forwards}
+  .lg .gl{position:absolute;left:12.56%;top:50%;width:62%;aspect-ratio:1;border-radius:50%;opacity:0;transform:translate(-50%,-50%)}
+  .lg .gl.r{background:radial-gradient(closest-side,rgba(255,45,60,.22),rgba(255,45,60,0));animation:gl .7s ease-in-out 1.14s}
+  .lg .gl.b{background:radial-gradient(closest-side,rgba(40,105,255,.2),rgba(40,105,255,0));animation:gl .8s ease-in-out 1.5s}
+  .lg .ln{position:absolute;left:27.3%;width:72.7%;overflow:hidden}
+  .lg .l1{top:8.33%;height:40%}.lg .l2{top:50%;height:40.83%}
+  .lg .ln img{left:-37.55%;width:137.55%;animation:up .65s cubic-bezier(.16,1,.3,1) both}
+  .lg .l1 img{top:-20.83%;height:250%;clip-path:inset(8.33% 0 51.67% 0);animation-delay:1.32s}
+  .lg .l2 img{top:-122.45%;height:244.9%;clip-path:inset(50% 0 9.17% 0);animation-delay:1.44s}
+  .ld{display:flex;flex-direction:column;align-items:center;gap:7px;opacity:0;animation:fi .5s ease 2.5s both}
+  .ld svg{width:96px;height:20px;overflow:visible}
+  .ld path{fill:none;stroke:#E30011;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:50 200;animation:mon 1.4s linear infinite}
+  .ld span{font-size:12.5px;color:#8A8F99;letter-spacing:.08em}
+  @keyframes ra{0%{stroke-dashoffset:100;animation-timing-function:cubic-bezier(.5,0,.9,.6)}17%{stroke-dashoffset:41.8;animation-timing-function:cubic-bezier(.2,.4,.3,1)}44%,62%{stroke-dashoffset:0;animation-timing-function:cubic-bezier(.45,0,.25,1)}86%,100%{stroke-dashoffset:-56.75}}
+  @keyframes hd{0%{offset-distance:0%;opacity:1;animation-timing-function:cubic-bezier(.5,0,.9,.6)}17%{offset-distance:58.2%;animation-timing-function:cubic-bezier(.2,.4,.3,1)}44%{offset-distance:100%;opacity:1}50%,100%{offset-distance:100%;opacity:0}}
   @keyframes dr{to{stroke-dashoffset:0}}
   @keyframes rt{from{clip-path:inset(60% 72.7% 40% 0)}to{clip-path:inset(0 72.7% 40% 0)}}
-  @keyframes rb{from{clip-path:inset(60% 72.7% 40% 0)}to{clip-path:inset(60% 72.7% 0 0)}}
-  @keyframes beat{0%{transform:scale(1)}18%{transform:scale(1.12)}34%{transform:scale(1)}52%{transform:scale(1.07)}72%,100%{transform:scale(1)}}
-  @keyframes ring{0%{opacity:.9;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.6)}}
-  @keyframes sir{0%,100%{opacity:0}25%,55%{opacity:.5}}
-  @keyframes tx{from{clip-path:inset(0 100% 0 27.3%);transform:translateX(-10px)}to{clip-path:inset(0 0 0 27.3%);transform:none}}
-  @keyframes wh{to{stroke:#fff;filter:drop-shadow(0 0 0 rgba(255,40,60,0))}}
+  @keyframes rb{from{clip-path:inset(59.5% 72.7% 40% 0)}to{clip-path:inset(59.5% 72.7% 0 0)}}
+  @keyframes pop{from{transform:scale(.94)}to{transform:scale(1)}}
+  @keyframes beat{0%,100%{transform:scale(1)}35%{transform:scale(1.065)}}
+  @keyframes idle{0%,48%,100%{transform:scale(1)}12%{transform:scale(1.035)}24%{transform:scale(1)}36%{transform:scale(1.018)}}
+  @keyframes ring{0%{opacity:.8;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}}
+  @keyframes gl{0%,100%{opacity:0}40%{opacity:1}}
+  @keyframes sh{from{background-position:100% 0}to{background-position:0% 0}}
+  @keyframes up{from{transform:translateY(44%);opacity:0}60%{opacity:1}to{transform:none;opacity:1}}
   @keyframes fo{to{opacity:0}}
   @keyframes fi{to{opacity:1}}
-  @keyframes mon{from{stroke-dashoffset:260}to{stroke-dashoffset:0}}
-  @media (prefers-reduced-motion:reduce){#splash *{animation:none!important}.lg svg.ecg,.lg .ring,.lg .gl{display:none}.ld{opacity:1}}
+  @keyframes mon{from{stroke-dashoffset:250}to{stroke-dashoffset:0}}
+  @media (prefers-reduced-motion:reduce){#splash *{animation:none!important}.lg svg.ecg,.lg .ring,.lg .gl,.lg .sh{display:none}.ld{opacity:1}}
   #net{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#15171C;color:#fff;border-radius:999px;padding:10px 18px;font:600 14px -apple-system,"Apple SD Gothic Neo",sans-serif;display:none;z-index:6}
 </style>
 </head>
@@ -65,11 +76,11 @@
 <div id="bar"></div>
 <div id="frames"></div>
 <div id="splash" role="img" aria-label="RESCUE LIFE 불러오는 중"><div class="lg">
-  <i class="gl r"></i><i class="gl b"></i><i class="ring"></i><i class="ring r2"></i>
-  <svg class="ecg" viewBox="0 0 935 240" aria-hidden="true"><path class="a" pathLength="100" d="M-700 143 H24 L48 108 L60 169 L88 57 L107 224 L129 117 L140 137"/></svg>
-  <div class="rr"><img class="rt" src="logo-full.png" alt=""><img class="rb" src="logo-full.png" alt=""></div>
-  <img class="tx" src="logo-full.png" alt="RESCUE LIFE">
-</div><div class="ld"><svg viewBox="0 0 120 24" aria-hidden="true"><path d="M0 14 H38 L44 9 L50 14 L56 2 L63 22 L68 11 L73 14 H120"/></svg><span>불러오는 중…</span></div></div>
+  <i class="gl r"></i><i class="gl b"></i><i class="ring"></i>
+  <div class="rr"><img class="rt" src="logo-full.png" alt=""><img class="rb" src="logo-full.png" alt=""><i class="sh"></i></div>
+  <svg class="ecg" viewBox="0 0 935 240" aria-hidden="true"><path class="a" pathLength="100" d="M-700 143 H24 L48 108 L60 169 L88 57 L107 224 L129 117 L140 137"/><path class="w" pathLength="100" d="M6 143 H24 L48 108 L60 169 L88 57 L107 224 L129 117 L140 137"/><circle r="7"/></svg>
+  <div class="ln l1"><img src="logo-full.png" alt=""></div><div class="ln l2"><img src="logo-full.png" alt=""></div>
+</div><div class="ld"><svg viewBox="0 0 120 24" aria-hidden="true"><path d="M0 14 H38 L44 9 L50 14 L56 2 L63 22 L68 11 L73 14 H120"/></svg><span>불러오는 중</span></div></div>
 <div id="net">인터넷 연결을 확인해 주세요</div>
 <script>
 var EXEC='https://script.google.com/macros/s/AKfycbxCM8O-ochC4oDsjYsJiq6Iz5DoSbv7RZr3YgnMvynsNaUdoKDexgvq93R-Mq6jPwWz/exec';
@@ -79,7 +90,7 @@ var VIEWS={'':'', cal:'?view=cal', stats:'?view=stats', notice:'?view=notice', c
 var FRESH=20000, PRELOAD=['','cal','contact'];
 var box=document.getElementById('frames'), sp=document.getElementById('splash');
 /* 로고 애니메이션(약 2초)은 끝까지 보여 주고 닫음. 화면이 다 떴으면 탭해서 바로 넘기기 */
-var T0=Date.now(), MIN=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:2000, spT=0;
+var T0=Date.now(), MIN=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:2400, spT=0;
 function spOff(now){clearTimeout(spT);var w=now?0:Math.max(0,T0+MIN-Date.now());spT=setTimeout(function(){sp.classList.add('off');},w);}
 function spOn(){clearTimeout(spT);sp.classList.remove('off');}
 sp.addEventListener('click',function(){if(CUR!==null&&F[CUR]&&F[CUR].ready)spOff(true);});
