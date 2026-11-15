@@ -52,6 +52,10 @@
   .ld svg{width:96px;height:20px;overflow:visible}
   .ld path{fill:none;stroke:#E30011;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:50 200;animation:mon 1.4s linear infinite}
   .ld span{font-size:12.5px;color:#8A8F99;letter-spacing:.08em}
+  .ecg .sp{stroke:#fff;stroke-width:8.73;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:13 300;stroke-dashoffset:13;opacity:0;filter:drop-shadow(0 0 3px #ff2a3a) drop-shadow(0 0 8px #ff2a3a) drop-shadow(0 0 16px rgba(255,42,58,.6));animation:spk .55s cubic-bezier(.45,0,.3,1) 2.05s both}
+  .ecg .fl{stroke:#fff;stroke-width:8.73;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;opacity:0;filter:drop-shadow(0 0 2px #ff4d5e) drop-shadow(0 0 7px rgba(255,77,94,.8));animation:flz .5s ease-out 2.55s both}
+  @keyframes spk{0%{stroke-dashoffset:13;opacity:0}6%{opacity:1}90%{opacity:1}100%{stroke-dashoffset:-100;opacity:0}}
+  @keyframes flz{0%{opacity:0}35%{opacity:.95}100%{opacity:0}}
   @keyframes ra{from{stroke-dashoffset:38.9}to{stroke-dashoffset:-100}}
   @keyframes hd{0%{offset-distance:0%;opacity:1}93.75%{offset-distance:100%;opacity:1}100%{offset-distance:100%;opacity:0}}
   @keyframes dr{to{stroke-dashoffset:0}}
@@ -79,7 +83,7 @@
 <div id="splash" role="img" aria-label="RESCUE LIFE 불러오는 중"><div class="lg">
   <i class="gl r"></i><i class="gl b"></i><i class="ring"></i>
   <div class="rr"><img class="rt" src="logo-full.png" alt=""><img class="rb" src="logo-full.png" alt=""><i class="sh"></i></div>
-  <svg class="ecg" viewBox="0 0 935 240" aria-hidden="true"><path class="a" pathLength="100" d="M-300 143.33 H22 L48 106.5 L60.5 173 L88 54.5 L109 226.5 L129 115 L141 143.33 H1100"/><circle r="7"/></svg>
+  <svg class="ecg" viewBox="0 0 935 240" aria-hidden="true"><path class="a" pathLength="100" d="M-300 143.33 H22 L48 106.5 L60.5 173 L88 54.5 L109 226.5 L129 115 L141 143.33 H1100"/><path class="fl" pathLength="100" d="M6 143.33 H22 L48 106.5 L60.5 173 L88 54.5 L109 226.5 L129 115 L141 143.33 H935"/><path class="sp" pathLength="100" d="M6 143.33 H22 L48 106.5 L60.5 173 L88 54.5 L109 226.5 L129 115 L141 143.33 H935"/><circle r="7"/></svg>
   <div class="ln l1"><img src="logo-full.png" alt=""></div><div class="ln l2"><img src="logo-full.png" alt=""></div>
 </div><div class="ld"><svg viewBox="0 0 120 24" aria-hidden="true"><path d="M0 14 H38 L44 9 L50 14 L56 2 L63 22 L68 11 L73 14 H120"/></svg><span>불러오는 중</span></div></div>
 <div id="net">인터넷 연결을 확인해 주세요</div>
@@ -91,7 +95,7 @@ var VIEWS={'':'', cal:'?view=cal', stats:'?view=stats', notice:'?view=notice', c
 var FRESH=20000, PRELOAD=['','cal','contact'];
 var box=document.getElementById('frames'), sp=document.getElementById('splash');
 /* 로고 애니메이션(약 2초)은 끝까지 보여 주고 닫음. 화면이 다 떴으면 탭해서 바로 넘기기 */
-var T0=Date.now(), MIN=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:2400, spT=0;
+var T0=Date.now(), MIN=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?0:2950, spT=0;
 function spOff(now){clearTimeout(spT);var w=now?0:Math.max(0,T0+MIN-Date.now());spT=setTimeout(function(){sp.classList.add('off');},w);}
 function spOn(){clearTimeout(spT);sp.classList.remove('off');}
 sp.addEventListener('click',function(){if(CUR!==null&&F[CUR]&&F[CUR].ready)spOff(true);});
