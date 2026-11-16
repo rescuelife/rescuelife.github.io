@@ -134,8 +134,8 @@ window.addEventListener('message',function(e){
   if(d.rl==='save'&&typeof d.k==='string'&&/^rl_/.test(d.k)){var o=stGet();if(d.v==null)delete o[d.k];else o[d.k]=String(d.v).slice(0,2000);stPut(o);}
   else if(d.rl==='sync'&&d.s&&typeof d.s==='object'){var o2=stGet(),n=0;for(var k in d.s)if(/^rl_/.test(k)&&typeof d.s[k]==='string'&&!(k in o2)){o2[k]=d.s[k].slice(0,2000);n++;}if(n)stPut(o2);}
   else if(d.rl==='need'){try{e.source.postMessage({rl:'store',s:stGet()},e.origin);}catch(_){}}
-  else if(d.rl==='dl'&&typeof d.u==='string'&&/^data:image\/(jpeg|png);base64,/.test(d.u)&&d.u.length<15e6){var r0=e.source,o0=e.origin,er=0;
-    try{var n0=String(d.n||'사진.jpg').replace(/[\\\/:*?"<>|]/g,'_').slice(0,80),b=d.u.split(','),bin=atob(b[1]),arr=new Uint8Array(bin.length);for(var q=0;q<bin.length;q++)arr[q]=bin.charCodeAt(q);
+  else if(d.rl==='dl'&&typeof d.u==='string'&&/^data:[\w.+-]+\/[\w.+-]+;base64,/.test(d.u)&&d.u.length<30e6){var r0=e.source,o0=e.origin,er=0;
+    try{var n0=String(d.n||'파일').replace(/[\\\/:*?"<>|]/g,'_').slice(0,80),b=d.u.split(','),bin=atob(b[1]),arr=new Uint8Array(bin.length);for(var q=0;q<bin.length;q++)arr[q]=bin.charCodeAt(q);
       var url=URL.createObjectURL(new Blob([arr],{type:b[0].slice(5,b[0].indexOf(';'))})),a=document.createElement('a');a.href=url;a.download=n0;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},30000);}catch(x){er=1;}
     try{r0.postMessage({rl:'dlok',err:er},o0);}catch(_){}}
   else if(d.rl==='pushq'){try{e.source.postMessage({rl:'pushst',st:pushState()},e.origin);}catch(_){}}
