@@ -71,6 +71,7 @@
   @keyframes mon{from{stroke-dashoffset:250}to{stroke-dashoffset:0}}
   @media (prefers-reduced-motion:reduce){#splash *{animation:none!important}.lg svg.ecg,.lg .ring,.lg .gl,.lg .sh{display:none}.ld{opacity:1}}
   #net{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#15171C;color:#fff;border-radius:999px;padding:10px 18px;font:600 14px -apple-system,"Apple SD Gothic Neo",sans-serif;display:none;z-index:6}
+#pask{position:fixed;inset:0;z-index:50;background:rgba(10,12,18,.45);display:flex;align-items:center;justify-content:center;padding:24px}#pask .pk{background:#fff;color:#14171F;border-radius:18px;padding:22px 20px 16px;max-width:320px;width:100%;text-align:center;font:15px/1.55 -apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.25)}#pask .pk>b{font-size:18px}#pask p{margin:10px 0 16px;color:#4A505C}#pask .pb{display:flex;gap:8px}#pask button{flex:1;font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px;cursor:pointer;background:#F1EFEA;color:#4A505C}#pask #pky{background:#D7263D;color:#fff}#pask button:disabled{opacity:.6}
 </style>
 </head>
 <body>
@@ -133,6 +134,10 @@ window.addEventListener('message',function(e){
   if(d.rl==='save'&&typeof d.k==='string'&&/^rl_/.test(d.k)){var o=stGet();if(d.v==null)delete o[d.k];else o[d.k]=String(d.v).slice(0,2000);stPut(o);}
   else if(d.rl==='sync'&&d.s&&typeof d.s==='object'){var o2=stGet(),n=0;for(var k in d.s)if(/^rl_/.test(k)&&typeof d.s[k]==='string'&&!(k in o2)){o2[k]=d.s[k].slice(0,2000);n++;}if(n)stPut(o2);}
   else if(d.rl==='need'){try{e.source.postMessage({rl:'store',s:stGet()},e.origin);}catch(_){}}
+  else if(d.rl==='pushq'){try{e.source.postMessage({rl:'pushst',st:pushState()},e.origin);}catch(_){}}
+  else if(d.rl==='push'){var src=e.source,org=e.origin,st=pushState();function rep(m){try{src.postMessage(m,org);}catch(_){}}
+    if(st==='granted')pushTok().then(function(t){rep({rl:'pushtok',t:t});},function(x){rep({rl:'pushtok',err:'fail',m:String(x&&x.message||x).slice(0,120)});});
+    else if(st==='default')pushAsk(rep);else rep({rl:'pushtok',err:st});}
   else if(d.rl==='reload'){var v=frameOf(e.source);if(v!==null){F[v].ready=false;if(CUR===v)spOn();F[v].el.src=EXEC+VIEWS[v];}}
 });
 window.addEventListener('popstate',function(){show(viewOf());});
@@ -146,6 +151,27 @@ var LAST=null;(function pre(){var o=F[CUR],l=LAST&&F[LAST];if(!o||!o.ready||(l&&
   var next=PRELOAD.filter(function(v){return !F[v];})[0];if(next===undefined)return;
   setTimeout(function(){if(!F[next]){var n=make(next);n.seen=Date.now();LAST=next;}setTimeout(pre,700);},1200);})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+/* 🔔 휴대폰 알림 (파이어베이스): 안쪽 화면 ⚙ 설정의 「켜기」 → 여기서 허락을 받고 알림 주소(토큰)를 돌려줌 */
+var FB={apiKey:'AIzaSyAqSs5GyeeDa8BuXWhQNatjjcoTrhMmzBU',authDomain:'rescuelife-push.firebaseapp.com',projectId:'rescuelife-push',storageBucket:'rescuelife-push.firebasestorage.app',messagingSenderId:'798133655789',appId:'1:798133655789:web:246ead0316250d63d794e4'},
+  VAPID='BEpRAIanPfHzQqfJE4pGbhdAk1YAk86LYnE6IPw9vMUPDQLtErA8mNS45lod-rjm0BsZI_Y7xhIQho_Evk5__A8',FBV='10.12.2';
+function lsc(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=function(){no(new Error('알림 도구를 못 불러왔어요'));};document.head.appendChild(s);});}
+function pushState(){var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),app=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return ios&&!app?'ios-home':'no';
+  if(ios&&!app)return 'ios-home';return Notification.permission;}
+function pushTok(){var G='https://www.gstatic.com/firebasejs/'+FBV+'/';
+  return (window.firebase&&firebase.messaging?Promise.resolve():lsc(G+'firebase-app-compat.js').then(function(){return lsc(G+'firebase-messaging-compat.js');}))
+  .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB);return navigator.serviceWorker.register('sw.js');})
+  .then(function(reg){return navigator.serviceWorker.ready.then(function(){return firebase.messaging().getToken({vapidKey:VAPID,serviceWorkerRegistration:reg});});})
+  .then(function(t){if(!t)throw new Error('알림 주소가 비어 있어요');return t;});}
+function pushAsk(rep){var o=document.createElement('div');o.id='pask';
+  o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="휴대폰 알림 켜기"><b>🔔 휴대폰 알림 켜기</b><p>근무 · 이송 요청 같은 소식을<br>앱을 안 열어도 알려 드려요.<br>다음 창에서 <b>「허용」</b>을 눌러 주세요.</p><div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">켜기</button></div></div>';
+  document.body.appendChild(o);
+  o.querySelector('#pkn').onclick=function(){o.remove();rep({rl:'pushtok',err:'cancel'});};
+  o.querySelector('#pky').onclick=function(){var b=this;b.disabled=true;b.textContent='켜는 중…';
+    Promise.resolve(Notification.requestPermission()).then(function(p){if(p!=='granted'){var e=new Error(p);e.st=p==='denied'?'denied':'cancel';throw e;}return pushTok();})
+    .then(function(t){o.remove();rep({rl:'pushtok',t:t});},function(x){o.remove();rep({rl:'pushtok',err:x&&x.st||'fail',m:String(x&&x.message||x).slice(0,120)});});};}
+/* 알림을 누르면 그 화면으로 */
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){var d=e.data;if(!d||d.rl!=='nav'||!VIEWS.hasOwnProperty(d.v))return;history.pushState(null,'',d.v?'#'+d.v:location.pathname);show(d.v,true);});
 </script>
 </body>
 </html>
