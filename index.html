@@ -162,17 +162,29 @@ function lsc(u){return new Promise(function(ok,no){var s=document.createElement(
 function pushState(){var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),app=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
   if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return ios&&!app?'ios-home':'no';
   if(ios&&!app)return 'ios-home';return Notification.permission;}
+/* 단계마다 시간 제한 (멈추면 어느 단계에서 멈췄는지 알려 줌) */
+function tmo(p,ms,stage){return new Promise(function(ok,no){var t=setTimeout(function(){no(new Error(stage+' 단계에서 멈췄어요'));},ms);
+  p.then(function(v){clearTimeout(t);ok(v);},function(x){clearTimeout(t);no(new Error(stage+': '+String(x&&x.message||x).slice(0,80)));});});}
+/* 서비스워커(알림을 받는 뒷일꾼)가 켜질 때까지 */
+function swActive(reg){if(reg.active)return Promise.resolve(reg);return new Promise(function(ok){var w=reg.installing||reg.waiting;
+  if(!w){navigator.serviceWorker.ready.then(function(){ok(reg);});return;}
+  w.addEventListener('statechange',function(){if(w.state==='activated'||reg.active)ok(reg);});});}
 function pushTok(){var G='https://www.gstatic.com/firebasejs/'+FBV+'/';
-  return (window.firebase&&firebase.messaging?Promise.resolve():lsc(G+'firebase-app-compat.js').then(function(){return lsc(G+'firebase-messaging-compat.js');}))
-  .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB);return navigator.serviceWorker.register('sw.js');})
-  .then(function(reg){return navigator.serviceWorker.ready.then(function(){return firebase.messaging().getToken({vapidKey:VAPID,serviceWorkerRegistration:reg});});})
+  return tmo(window.firebase&&firebase.messaging?Promise.resolve():lsc(G+'firebase-app-compat.js').then(function(){return lsc(G+'firebase-messaging-compat.js');}),15000,'알림 도구 불러오기')
+  .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB);return tmo(navigator.serviceWorker.register('sw.js').then(swActive),15000,'알림 준비');})
+  .then(function(reg){return tmo(firebase.messaging().getToken({vapidKey:VAPID,serviceWorkerRegistration:reg}),25000,'알림 주소 받기');})
   .then(function(t){if(!t)throw new Error('알림 주소가 비어 있어요');return t;});}
+/* 「허용」 창: 옛 방식(콜백)도 받고, 창이 안 뜨면 45초 뒤 알려 줌 */
+function askPerm(){return new Promise(function(ok){var fin=0,iv;function f(p){if(fin)return;fin=1;clearInterval(iv);ok(p||Notification.permission);}
+  try{var r=Notification.requestPermission(f);if(r&&r.then)r.then(f,function(){f(Notification.permission);});}catch(x){f(Notification.permission);}
+  iv=setInterval(function(){if(Notification.permission!=='default')f(Notification.permission);},500);
+  setTimeout(function(){f(Notification.permission);},45000);});}
 function pushAsk(rep){var o=document.createElement('div');o.id='pask';
   o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="휴대폰 알림 켜기"><b>🔔 휴대폰 알림 켜기</b><p>근무 · 이송 요청 같은 소식을<br>앱을 안 열어도 알려 드려요.<br>다음 창에서 <b>「허용」</b>을 눌러 주세요.</p><div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">켜기</button></div></div>';
   document.body.appendChild(o);
   o.querySelector('#pkn').onclick=function(){o.remove();rep({rl:'pushtok',err:'cancel'});};
   o.querySelector('#pky').onclick=function(){var b=this;b.disabled=true;b.textContent='켜는 중…';
-    Promise.resolve(Notification.requestPermission()).then(function(p){if(p!=='granted'){var e=new Error(p);e.st=p==='denied'?'denied':'cancel';throw e;}return pushTok();})
+    askPerm().then(function(p){if(p!=='granted'){var e=new Error(p==='default'?'「허용」 창이 뜨지 않았어요. 주소창의 🔔 표시나 휴대폰 설정 → 알림에서 허용한 뒤 다시 눌러 주세요':p);e.st=p==='denied'?'denied':p==='default'?'fail':'cancel';throw e;}b.textContent='알림 주소 받는 중…';return pushTok();})
     .then(function(t){o.remove();rep({rl:'pushtok',t:t});},function(x){o.remove();rep({rl:'pushtok',err:x&&x.st||'fail',m:String(x&&x.message||x).slice(0,120)});});};}
 /* 알림을 누르면 그 화면으로 */
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){var d=e.data;if(!d||d.rl!=='nav'||!VIEWS.hasOwnProperty(d.v))return;history.pushState(null,'',d.v?'#'+d.v:location.pathname);show(d.v,true);});
