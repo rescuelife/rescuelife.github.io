@@ -140,8 +140,7 @@ window.addEventListener('message',function(e){
     try{r0.postMessage({rl:'dlok',err:er},o0);}catch(_){}}
   else if(d.rl==='pushq'){try{e.source.postMessage({rl:'pushst',st:pushState()},e.origin);}catch(_){}}
   else if(d.rl==='push'){var src=e.source,org=e.origin,st=pushState();function rep(m){try{src.postMessage(m,org);}catch(_){}}
-    if(st==='granted')pushTok().then(function(t){rep({rl:'pushtok',t:t});},function(x){rep({rl:'pushtok',err:'fail',m:String(x&&x.message||x).slice(0,120)});});
-    else if(st==='default')pushAsk(rep);else rep({rl:'pushtok',err:st});}
+    if(st==='granted'||st==='default')pushUI(rep,st==='default');else rep({rl:'pushtok',err:st});}
   else if(d.rl==='reload'){var v=frameOf(e.source);if(v!==null){F[v].ready=false;if(CUR===v)spOn();F[v].el.src=EXEC+VIEWS[v];}}
 });
 window.addEventListener('popstate',function(){show(viewOf());});
@@ -155,37 +154,70 @@ var LAST=null;(function pre(){var o=F[CUR],l=LAST&&F[LAST];if(!o||!o.ready||(l&&
   var next=PRELOAD.filter(function(v){return !F[v];})[0];if(next===undefined)return;
   setTimeout(function(){if(!F[next]){var n=make(next);n.seen=Date.now();LAST=next;}setTimeout(pre,700);},1200);})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-/* 🔔 휴대폰 알림 (파이어베이스): 안쪽 화면 ⚙ 설정의 「켜기」 → 여기서 허락을 받고 알림 주소(토큰)를 돌려줌 */
+/* 🔔 휴대폰 알림 (파이어베이스): 안쪽 화면 ⚙ 설정의 「켜기」 → 여기서 허락을 받고 알림 주소(토큰)를 돌려줌
+   v25: 진행 창을 항상 보여 줌(단계 + 몇 초째) · 언제든 「취소」 · 알림 주소가 막히면 옛 등록을 지우고 한 번 더 · 실패하면 창에 이유를 남김(캡처용) · 전체 110초 안에 끝 */
 var FB={apiKey:'AIzaSyAqSs5GyeeDa8BuXWhQNatjjcoTrhMmzBU',authDomain:'rescuelife-push.firebaseapp.com',projectId:'rescuelife-push',storageBucket:'rescuelife-push.firebasestorage.app',messagingSenderId:'798133655789',appId:'1:798133655789:web:246ead0316250d63d794e4'},
   VAPID='BEpRAIanPfHzQqfJE4pGbhdAk1YAk86LYnE6IPw9vMUPDQLtErA8mNS45lod-rjm0BsZI_Y7xhIQho_Evk5__A8',FBV='10.12.2';
-function lsc(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=function(){no(new Error('알림 도구를 못 불러왔어요'));};document.head.appendChild(s);});}
+function lsc(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=function(){s.remove();no(new Error('알림 도구를 못 불러왔어요'));};document.head.appendChild(s);});}
 function pushState(){var ios=/iPhone|iPad|iPod/.test(navigator.userAgent),app=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
   if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))return ios&&!app?'ios-home':'no';
   if(ios&&!app)return 'ios-home';return Notification.permission;}
 /* 단계마다 시간 제한 (멈추면 어느 단계에서 멈췄는지 알려 줌) */
 function tmo(p,ms,stage){return new Promise(function(ok,no){var t=setTimeout(function(){no(new Error(stage+' 단계에서 멈췄어요'));},ms);
   p.then(function(v){clearTimeout(t);ok(v);},function(x){clearTimeout(t);no(new Error(stage+': '+String(x&&x.message||x).slice(0,80)));});});}
-/* 서비스워커(알림을 받는 뒷일꾼)가 켜질 때까지 */
-function swActive(reg){if(reg.active)return Promise.resolve(reg);return new Promise(function(ok){var w=reg.installing||reg.waiting;
+/* 서비스워커(알림을 받는 뒷일꾼)가 켜질 때까지 (설치 실패 = 바로 알려 줌) */
+function swActive(reg){if(reg.active)return Promise.resolve(reg);return new Promise(function(ok,no){var w=reg.installing||reg.waiting;
   if(!w){navigator.serviceWorker.ready.then(function(){ok(reg);});return;}
-  w.addEventListener('statechange',function(){if(w.state==='activated'||reg.active)ok(reg);});});}
-function pushTok(){var G='https://www.gstatic.com/firebasejs/'+FBV+'/';
-  return tmo(window.firebase&&firebase.messaging?Promise.resolve():lsc(G+'firebase-app-compat.js').then(function(){return lsc(G+'firebase-messaging-compat.js');}),15000,'알림 도구 불러오기')
-  .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB);return tmo(navigator.serviceWorker.register('sw.js').then(swActive),15000,'알림 준비');})
-  .then(function(reg){return tmo(firebase.messaging().getToken({vapidKey:VAPID,serviceWorkerRegistration:reg}),25000,'알림 주소 받기');})
+  w.addEventListener('statechange',function(){if(w.state==='activated'||reg.active)ok(reg);else if(w.state==='redundant')no(new Error('뒷일꾼 설치 실패'));});});}
+/* 알림 도구는 창이 뜨자마자 미리 받기 시작 (허용 누르는 동안 받아 둠) */
+var FBL=null;function fbLoad(){if(window.firebase&&firebase.messaging)return Promise.resolve();var G='https://www.gstatic.com/firebasejs/'+FBV+'/';
+  if(!FBL){FBL=(window.firebase?Promise.resolve():lsc(G+'firebase-app-compat.js')).then(function(){return firebase.messaging?0:lsc(G+'firebase-messaging-compat.js');});FBL.catch(function(){FBL=null;});}return FBL;}
+function pushTok(stg){stg=stg||function(){};var m,reg;function tok(){return m.getToken({vapidKey:VAPID,serviceWorkerRegistration:reg});}
+  stg('알림 도구 불러오는 중');
+  return tmo(fbLoad(),15000,'알림 도구 불러오기')
+  .then(function(){if(!firebase.apps.length)firebase.initializeApp(FB);stg('알림 준비 중');return tmo(navigator.serviceWorker.register('sw.js').then(swActive),10000,'알림 준비');})
+  .then(function(r){reg=r;m=firebase.messaging();stg('알림 주소 받는 중');return tmo(tok(),20000,'알림 주소 받기')
+    /* 안드로이드: 예전에 만든 등록이 꼬여 있으면 여기서 멈춤 → 옛 등록을 지우고 한 번 더 */
+    .catch(function(x1){stg('옛 등록 지우고 다시 받는 중');
+      return tmo(reg.pushManager.getSubscription().then(function(s){return s?s.unsubscribe():0;}),5000,'옛 등록 지우기').catch(function(){})
+      .then(function(){return tmo(tok(),20000,'알림 주소 다시 받기');})
+      .catch(function(x2){throw new Error(String(x1&&x1.message||x1)+' → '+String(x2&&x2.message||x2));});});})
   .then(function(t){if(!t)throw new Error('알림 주소가 비어 있어요');return t;});}
-/* 「허용」 창: 옛 방식(콜백)도 받고, 창이 안 뜨면 45초 뒤 알려 줌 */
+/* 「허용」 창: 옛 방식(콜백)도 받고, 창이 안 뜨면 40초 뒤 알려 줌 */
 function askPerm(){return new Promise(function(ok){var fin=0,iv;function f(p){if(fin)return;fin=1;clearInterval(iv);ok(p||Notification.permission);}
   try{var r=Notification.requestPermission(f);if(r&&r.then)r.then(f,function(){f(Notification.permission);});}catch(x){f(Notification.permission);}
   iv=setInterval(function(){if(Notification.permission!=='default')f(Notification.permission);},500);
-  setTimeout(function(){f(Notification.permission);},45000);});}
-function pushAsk(rep){var o=document.createElement('div');o.id='pask';
-  o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="휴대폰 알림 켜기"><b>🔔 휴대폰 알림 켜기</b><p>근무 · 이송 요청 같은 소식을<br>앱을 안 열어도 알려 드려요.<br>다음 창에서 <b>「허용」</b>을 눌러 주세요.</p><div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">켜기</button></div></div>';
-  document.body.appendChild(o);
-  o.querySelector('#pkn').onclick=function(){o.remove();rep({rl:'pushtok',err:'cancel'});};
-  o.querySelector('#pky').onclick=function(){var b=this;b.disabled=true;b.textContent='켜는 중…';
-    askPerm().then(function(p){if(p!=='granted'){var e=new Error(p==='default'?'「허용」 창이 뜨지 않았어요. 주소창의 🔔 표시나 휴대폰 설정 → 알림에서 허용한 뒤 다시 눌러 주세요':p);e.st=p==='denied'?'denied':p==='default'?'fail':'cancel';throw e;}b.textContent='알림 주소 받는 중…';return pushTok();})
-    .then(function(t){o.remove();rep({rl:'pushtok',t:t});},function(x){o.remove();rep({rl:'pushtok',err:x&&x.st||'fail',m:String(x&&x.message||x).slice(0,120)});});};}
+  setTimeout(function(){f(Notification.permission);},40000);});}
+/* 고장 찾기용 한 줄: 기기 · 브라우저 · 홈 화면 앱 여부 · 허용 상태 · 뒷일꾼 상태 */
+function pdiag(){var u=navigator.userAgent,os=(u.match(/Android [\d.]+/)||u.match(/iPhone OS [\d_]+/)||['PC'])[0].replace(/_/g,'.'),
+  br=/SamsungBrowser\/[\d]+/.test(u)?'삼성인터넷 '+u.match(/SamsungBrowser\/([\d]+)/)[1]:/KAKAOTALK/i.test(u)?'카톡 안 브라우저':/NAVER/.test(u)?'네이버 앱':(u.match(/Chrome\/(\d+)/)?'크롬 '+u.match(/Chrome\/(\d+)/)[1]:u.match(/Version\/([\d.]+).*Safari/)?'사파리 '+u.match(/Version\/([\d.]+)/)[1]:'기타'),
+  app=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);var sw=navigator.serviceWorker&&navigator.serviceWorker.controller?'켜짐':'꺼짐';
+  return os+' · '+br+' · '+(app?'홈 화면 앱':'브라우저 탭')+' · 허용 '+(window.Notification?Notification.permission:'없음')+' · 뒷일꾼 '+sw+' · v25';}
+/* 진행 창: 단계 · 몇 초째 · 언제든 취소 · 실패하면 이유를 남겨 둠 */
+function pushUI(rep,ask){var o=document.getElementById('pask');if(o)o.remove();o=document.createElement('div');o.id='pask';
+  o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="휴대폰 알림 켜기"><b>🔔 휴대폰 알림 켜기</b><p id="pkm"></p><div id="pkd" style="display:none;font-size:11.5px;line-height:1.5;color:#8A8F99;background:#F6F5F1;border-radius:10px;padding:8px 10px;margin:-6px 0 14px;word-break:keep-all;text-align:left"></div><div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">켜기</button></div></div>';
+  document.body.appendChild(o);fbLoad().catch(function(){});
+  var M=o.querySelector('#pkm'),D=o.querySelector('#pkd'),N=o.querySelector('#pkn'),Y=o.querySelector('#pky'),fin=0,t0=0,tick=0,cur='',hard=0;
+  function txt(h){M.innerHTML=h;}
+  function paint(){if(fin)return;var s=Math.round((Date.now()-t0)/1000);txt(cur+'<br><span style="font-size:13px;color:#8A8F99">'+s+'초째'+(s>=20?' · 조금만 더 기다려 주세요':'')+'</span>');}
+  function stg(t){cur=t+'…';if(!tick){t0=Date.now();tick=setInterval(paint,1000);}paint();}
+  function stop(){clearInterval(tick);clearTimeout(hard);}
+  function ok(t){if(fin)return;fin=1;stop();o.remove();rep({rl:'pushtok',t:t});}
+  function bad(x){if(fin)return;fin=1;stop();var m=String(x&&x.message||x).slice(0,160),st=x&&x.st||'fail';rep({rl:'pushtok',err:st,m:m});
+    if(st==='cancel'){o.remove();return;}
+    txt('<b style="color:#C93A2E">알림을 켜지 못했어요</b><br>'+m.replace(/</g,'&lt;')+'<br><span style="font-size:13px">잠시 뒤 다시 눌러 보고, 그래도 안 되면 <b>이 화면을 캡처</b>해서 관리자에게 보내 주세요.</span>');
+    D.textContent=pdiag();D.style.display='block';N.style.display='none';Y.disabled=false;Y.textContent='닫기';Y.onclick=function(){o.remove();};}
+  function run(){N.textContent='취소';Y.style.display='none';
+    stg('알림 주소 받는 중');pushTok(stg).then(ok,bad);}
+  /* 안쪽 화면은 120초까지만 기다림 → 창을 연 때부터 110초 안에 반드시 끝냄 */
+  hard=setTimeout(function(){bad(new Error(cur?cur.replace('…','')+' 단계에서 너무 오래 걸렸어요':'시간이 지났어요. 설정에서 「켜기」를 다시 눌러 주세요'));},110000);
+  N.onclick=function(){var e=new Error('cancel');e.st='cancel';bad(e);};
+  if(!ask){run();return;}
+  txt('근무 · 이송 요청 같은 소식을<br>앱을 안 열어도 알려 드려요.<br>다음 창에서 <b>「허용」</b>을 눌러 주세요.');
+  Y.onclick=function(){Y.disabled=true;Y.textContent='켜는 중…';N.textContent='취소';stg('「허용」 창을 기다리는 중');
+    var hint=setTimeout(function(){if(!fin&&Notification.permission==='default'){cur='「허용」 창이 안 보이면 화면 위·아래의 🔔 표시를 눌러 주세요…';paint();}},8000);
+    askPerm().then(function(p){clearTimeout(hint);if(fin)return;if(p!=='granted'){var e=new Error(p==='default'?'「허용」 창이 뜨지 않았어요. 휴대폰 설정 → 애플리케이션 → 레스큐라이프(또는 크롬) → 알림을 켠 뒤 다시 눌러 주세요':'알림이 막혀 있어요. 휴대폰 설정 → 애플리케이션 → 레스큐라이프(또는 크롬) → 알림 → 허용');e.st=p==='denied'?'denied':'fail';bad(e);return;}
+      run();});};}
 /* 알림을 누르면 그 화면으로 */
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){var d=e.data;if(!d||d.rl!=='nav'||!VIEWS.hasOwnProperty(d.v))return;history.pushState(null,'',d.v?'#'+d.v:location.pathname);show(d.v,true);});
 </script>
