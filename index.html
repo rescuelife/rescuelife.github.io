@@ -154,6 +154,7 @@ window.addEventListener('message',function(e){
   else if(d.rl==='pushq'){var nc=nonChrome();if(nc)chromeAsk(nc);try{e.source.postMessage({rl:'pushst',st:nc?'cancel':pushState()},e.origin);}catch(_){}}
   else if(d.rl==='push'){var src=e.source,org=e.origin,st=pushState();function rep(m){try{src.postMessage(m,org);}catch(_){}}
     if(st==='granted'||st==='default')pushUI(rep,st==='default');else rep({rl:'pushtok',err:st});}
+  else if(d.rl==='goack'){GOQ=null;}
   else if(d.rl==='reload'){var v=frameOf(e.source);if(v!==null){F[v].ready=false;if(CUR===v)spOn();F[v].el.src=EXEC+VIEWS[v];}}
 });
 window.addEventListener('popstate',function(){show(viewOf());});
@@ -161,7 +162,12 @@ function net(){document.getElementById('net').style.display=navigator.onLine?'no
 window.addEventListener('online',function(){net();show(viewOf(),true);});window.addEventListener('offline',net);net();
 /* 앱을 백그라운드에 두었다가 다시 열면 지금 화면 데이터를 새로 받음 */
 var hidAt=0;document.addEventListener('visibilitychange',function(){if(document.hidden)hidAt=Date.now();else if(hidAt&&Date.now()-hidAt>FRESH&&CUR!==null)refresh(CUR);});
+/* 🔔 근무 변경 알림을 누르면 그 일정으로: 일정 화면에 {rl:'goev'}를 받았다는 답(goack)이 올 때까지 1초마다 (최대 40초) */
+var GOQ=null;
+function goSend(g){g=String(g||'').slice(0,300);if(!g)return;var q=GOQ={g:g,n:0};(function tick(){if(GOQ!==q)return;if(++q.n>40){GOQ=null;return;}var o=F.cal;if(o&&o.ready)bcast(o.el.contentWindow,{rl:'goev',g:g});setTimeout(tick,1000);})();}
+var GO0=(function(){try{var g=new URLSearchParams(location.search).get('go')||'';if(g)history.replaceState(null,'',location.pathname+location.hash);return g;}catch(e){return '';}})();
 show(viewOf());
+if(GO0&&viewOf()==='cal')goSend(GO0);
 /* 첫 화면이 뜬 뒤, 자주 쓰는 탭을 하나씩 뒤에서 미리 열어 둠 */
 var LAST=null;(function pre(){var o=F[CUR],l=LAST&&F[LAST];if(!o||!o.ready||(l&&!l.ready)){setTimeout(pre,700);return;}
   var next=PRELOAD.filter(function(v){return !F[v];})[0];if(next===undefined)return;
@@ -249,7 +255,7 @@ function pushUI(rep,ask){var o=document.getElementById('pask');if(o)o.remove();o
     askPerm().then(function(p){clearTimeout(hint);if(fin)return;if(p!=='granted'){var e=new Error(p==='default'?'「허용」 창이 뜨지 않았어요. 휴대폰 설정 → 애플리케이션 → 레스큐라이프(또는 크롬) → 알림을 켠 뒤 다시 눌러 주세요':'알림이 막혀 있어요. 휴대폰 설정 → 애플리케이션 → 레스큐라이프(또는 크롬) → 알림 → 허용');e.st=p==='denied'?'denied':'fail';bad(e);return;}
       run();});};}
 /* 알림을 누르면 그 화면으로 */
-if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){var d=e.data;if(!d||d.rl!=='nav'||!VIEWS.hasOwnProperty(d.v))return;history.pushState(null,'',d.v?'#'+d.v:location.pathname);show(d.v,true);});
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',function(e){var d=e.data;if(!d||d.rl!=='nav'||!VIEWS.hasOwnProperty(d.v))return;history.pushState(null,'',d.v?'#'+d.v:location.pathname);show(d.v,true);if(d.v==='cal'&&d.g)goSend(String(d.g));});
 </script>
 </body>
 </html>
