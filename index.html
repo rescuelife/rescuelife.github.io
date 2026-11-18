@@ -138,7 +138,7 @@ window.addEventListener('message',function(e){
     try{var n0=String(d.n||'파일').replace(/[\\\/:*?"<>|]/g,'_').slice(0,80),b=d.u.split(','),bin=atob(b[1]),arr=new Uint8Array(bin.length);for(var q=0;q<bin.length;q++)arr[q]=bin.charCodeAt(q);
       var url=URL.createObjectURL(new Blob([arr],{type:b[0].slice(5,b[0].indexOf(';'))})),a=document.createElement('a');a.href=url;a.download=n0;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},30000);}catch(x){er=1;}
     try{r0.postMessage({rl:'dlok',err:er},o0);}catch(_){}}
-  else if(d.rl==='pushq'){try{e.source.postMessage({rl:'pushst',st:pushState()},e.origin);}catch(_){}}
+  else if(d.rl==='pushq'){var nc=nonChrome();if(nc)chromeAsk(nc);try{e.source.postMessage({rl:'pushst',st:nc?'cancel':pushState()},e.origin);}catch(_){}}
   else if(d.rl==='push'){var src=e.source,org=e.origin,st=pushState();function rep(m){try{src.postMessage(m,org);}catch(_){}}
     if(st==='granted'||st==='default')pushUI(rep,st==='default');else rep({rl:'pushtok',err:st});}
   else if(d.rl==='reload'){var v=frameOf(e.source);if(v!==null){F[v].ready=false;if(CUR===v)spOn();F[v].el.src=EXEC+VIEWS[v];}}
@@ -188,11 +188,28 @@ function askPerm(){return new Promise(function(ok){var fin=0,iv;function f(p){if
   try{var r=Notification.requestPermission(f);if(r&&r.then)r.then(f,function(){f(Notification.permission);});}catch(x){f(Notification.permission);}
   iv=setInterval(function(){if(Notification.permission!=='default')f(Notification.permission);},500);
   setTimeout(function(){f(Notification.permission);},40000);});}
+/* v26: 안드로이드인데 크롬이 아닌 브라우저(삼성 인터넷 · 웨일 · 카톡 등)로 연 앱 → 「허용」 창이 안 뜨는 경우가 많음 → 시도하지 않고 크롬 재설치 안내 팝업 하나만 */
+function nonChrome(){var u=navigator.userAgent;if(!/Android/.test(u))return '';
+  if(/SamsungBrowser/.test(u))return '삼성 인터넷';if(/Whale/.test(u))return '네이버 웨일';if(/NAVER/.test(u))return '네이버 앱';if(/KAKAOTALK/i.test(u))return '카카오톡';
+  if(/EdgA/.test(u))return '엣지';if(/OPR|Opera/.test(u))return '오페라';if(/Firefox/.test(u))return '파이어폭스';if(/; wv\)/.test(u)||!/Chrome\//.test(u))return '이 브라우저';return '';}
+function chromeAsk(br){var o=document.getElementById('pask');if(o)o.remove();o=document.createElement('div');o.id='pask';
+  var go='intent://rescuelife.github.io/#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent('https://play.google.com/store/apps/details?id=com.android.chrome')+';end';
+  var st='display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:14px;line-height:1.45;color:#14171F;margin:0 0 9px',nb='flex:none;width:22px;height:22px;border-radius:50%;background:#D7263D;color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center;margin-top:1px';
+  o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="크롬으로 다시 설치"><div style="font-size:40px;line-height:1;margin-bottom:6px">🔔</div><b>알림은 크롬 앱에서만 켤 수 있어요</b>'+
+   '<p style="margin:8px 0 14px">지금 앱은 <b>'+br+'</b>(으)로 설치돼 있어서<br>휴대폰 알림을 켤 수 없어요.</p>'+
+   '<div style="background:#F6F5F1;border-radius:14px;padding:12px 12px 3px;margin:0 0 14px">'+
+   '<div style="'+st+'"><span style="'+nb+'">1</span><span>아래 <b>「크롬으로 열기」</b></span></div>'+
+   '<div style="'+st+'"><span style="'+nb+'">2</span><span>크롬 오른쪽 위 <b>⋮ → 앱 설치</b></span></div>'+
+   '<div style="'+st+'"><span style="'+nb+'">3</span><span>새 아이콘으로 열고 <b>⚙ 설정 → 알림 켜기 → 허용</b></span></div></div>'+
+   '<div style="font-size:12.5px;color:#8A8F99;margin:-4px 0 14px;line-height:1.5">비밀번호 · 내 이름은 한 번 다시 입력해요.<br>설치가 끝나면 예전 아이콘은 지워 주세요.</div>'+
+   '<div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">크롬으로 열기</button></div></div>';
+  document.body.appendChild(o);o.querySelector('#pkn').onclick=function(){o.remove();};
+  o.querySelector('#pky').onclick=function(){var a=document.createElement('a');a.href=go;document.body.appendChild(a);a.click();a.remove();};}
 /* 고장 찾기용 한 줄: 기기 · 브라우저 · 홈 화면 앱 여부 · 허용 상태 · 뒷일꾼 상태 */
 function pdiag(){var u=navigator.userAgent,os=(u.match(/Android [\d.]+/)||u.match(/iPhone OS [\d_]+/)||['PC'])[0].replace(/_/g,'.'),
   br=/SamsungBrowser\/[\d]+/.test(u)?'삼성인터넷 '+u.match(/SamsungBrowser\/([\d]+)/)[1]:/KAKAOTALK/i.test(u)?'카톡 안 브라우저':/NAVER/.test(u)?'네이버 앱':(u.match(/Chrome\/(\d+)/)?'크롬 '+u.match(/Chrome\/(\d+)/)[1]:u.match(/Version\/([\d.]+).*Safari/)?'사파리 '+u.match(/Version\/([\d.]+)/)[1]:'기타'),
   app=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);var sw=navigator.serviceWorker&&navigator.serviceWorker.controller?'켜짐':'꺼짐';
-  return os+' · '+br+' · '+(app?'홈 화면 앱':'브라우저 탭')+' · 허용 '+(window.Notification?Notification.permission:'없음')+' · 뒷일꾼 '+sw+' · v25';}
+  return os+' · '+br+' · '+(app?'홈 화면 앱':'브라우저 탭')+' · 허용 '+(window.Notification?Notification.permission:'없음')+' · 뒷일꾼 '+sw+' · v26';}
 /* 진행 창: 단계 · 몇 초째 · 언제든 취소 · 실패하면 이유를 남겨 둠 */
 function pushUI(rep,ask){var o=document.getElementById('pask');if(o)o.remove();o=document.createElement('div');o.id='pask';
   o.innerHTML='<div class="pk" role="dialog" aria-modal="true" aria-label="휴대폰 알림 켜기"><b>🔔 휴대폰 알림 켜기</b><p id="pkm"></p><div id="pkd" style="display:none;font-size:11.5px;line-height:1.5;color:#8A8F99;background:#F6F5F1;border-radius:10px;padding:8px 10px;margin:-6px 0 14px;word-break:keep-all;text-align:left"></div><div class="pb"><button type="button" id="pkn">나중에</button><button type="button" id="pky">켜기</button></div></div>';
