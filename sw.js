@@ -1,5 +1,5 @@
 /* 앱 껍데기(아이콘·화면)만 저장. 근무 데이터는 항상 새로 불러옴 · 파일 하나가 실패해도 설치는 끝나게 (안 그러면 알림 켜기가 멈춤) */
-var C='rl-shell-v27', FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','favicon.png','logo-full.png'];
+var C='rl-shell-v28', FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','favicon.png','logo-full.png'];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return Promise.all(FILES.map(function(f){return c.add(f).catch(function(){});}));}));self.skipWaiting();});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C;}).map(function(x){return caches.delete(x);}));}));self.clients.claim();});
 self.addEventListener('fetch',function(e){

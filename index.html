@@ -116,6 +116,7 @@ function fadeIn(o,prev,from,to){var t=++FT;for(var k in F)F[k].el.classList.remo
   var dir=ORD.indexOf(to)>ORD.indexOf(from)?1:-1;prev.el.classList.add('out');
   var a=o.el.animate([{opacity:0},{opacity:1}],{duration:220,easing:'cubic-bezier(.2,0,0,1)'});
   a.onfinish=a.oncancel=function(){if(t===FT)prev.el.classList.remove('out');};
+  setTimeout(function(){try{if(a.playState!=='finished')a.finish();}catch(e){}if(t===FT)prev.el.classList.remove('out');},450); /* 혹시 움직임이 멈춰도 0.45초 뒤엔 무조건 다 보이게 */
   bcast(o.el.contentWindow,{rl:'enter',d:dir});}
 function show(v,force){
   var o=F[v],now=Date.now();
