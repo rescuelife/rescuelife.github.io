@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>레스큐라이프 구급차 요청서</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font:16px/1.5 sans-serif;color:#1D3A4F;background:#fff;text-align:center}a{color:#003A7C}</style>
+</head>
+<body>
+<div><p>🚑 구급차 요청서를 여는 중이에요…</p><p><a id="go" href="#">안 열리면 여기를 눌러 주세요</a></p></div>
+<script>
+/* 🔗 짧은 주소: rescuelife.github.io/req?k=코드 (나중에 올리기는 &f=요청번호까지) → 외부 구급차 요청서(Apps Script)로 그대로 넘김.
+   링크 코드(k)는 이 파일에 넣지 않음(공개 저장소) — 주소 뒤에 붙은 값을 그대로 전달만 함. */
+var EXEC='https://script.google.com/macros/s/AKfycbxCM8O-ochC4oDsjYsJiq6Iz5DoSbv7RZr3YgnMvynsNaUdoKDexgvq93R-Mq6jPwWz/exec';
+var q=(location.search||'').replace(/^\?/,'');
+var u=EXEC+'?view=req'+(q?'&'+q:'');
+document.getElementById('go').href=u;
+location.replace(u);
+</script>
+<noscript><p><a href="https://script.google.com/macros/s/AKfycbxCM8O-ochC4oDsjYsJiq6Iz5DoSbv7RZr3YgnMvynsNaUdoKDexgvq93R-Mq6jPwWz/exec?view=req">구급차 요청서 열기</a></p></noscript>
+</body>
+</html>
